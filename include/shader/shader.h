@@ -98,6 +98,10 @@ public:
     {
         glUseProgram(ID);
     }
+    int getUniformLocation(const std::string &name)
+    {
+        return glGetUniformLocation(ID, name.c_str());
+    }
     // uniform工具函数
     void setBool(const std::string &name, bool value) const
     {

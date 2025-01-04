@@ -53,9 +53,9 @@ int main(int argc, char *argv[])
     // ------------------------------------------------------------------
     float vertices[] = {
         // 位置              // 颜色
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // 右下
-        -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 左下
-        0.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f    // 顶部
+        0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // 右下
+        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 左下
+        0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f  // 顶部
     };
 
     unsigned int VBO, VAO;
@@ -94,6 +94,12 @@ int main(int argc, char *argv[])
 
         // be sure to activate the shader before any calls to glUniform
         shader.use();
+
+        // 更新uniform颜色
+        float timeValue = glfwGetTime();
+        float xOffset = sin(timeValue) / 2.0f;
+        float yOffset = cos(timeValue) / 2.0f; // 使用不同的公式
+        glUniform2f(shader.getUniformLocation("offsetVec"), xOffset, yOffset);
 
         // render the triangle
         glDrawArrays(GL_TRIANGLES, 0, 3);
