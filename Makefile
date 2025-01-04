@@ -18,31 +18,22 @@ LFLAGS := -lglfw3 -lopengl32 -lgdi32
 OUTPUT	:= output
 
 # define source directory
-SRC		:= src
-
+SRC		:= src/$(dir) #// 传递 var 变量定义执行文件目录
+C_SCR	:= src
 # define include directory
 INCLUDE	:= include
 
 # define lib directory
 LIB		:= lib
 
-ifeq ($(OS),Windows_NT)
 MAIN	:= main.exe
 SOURCEDIRS	:= $(SRC)
+C_SOURCEDIRS:=$(C_SCR)
 INCLUDEDIRS	:= $(INCLUDE)
 LIBDIRS		:= $(LIB)
 FIXPATH = $(subst /,\,$1)
 RM			:= del /q /f
 MD	:= mkdir
-else
-MAIN	:= main
-SOURCEDIRS	:= $(shell find $(SRC) -type d)
-INCLUDEDIRS	:= $(shell find $(INCLUDE) -type d)
-LIBDIRS		:= $(shell find $(LIB) -type d)
-FIXPATH = $1
-RM = rm -f
-MD	:= mkdir -p
-endif
 
 # define any directories containing header files other than /usr/include
 INCLUDES	:= $(patsubst %,-I%, $(INCLUDEDIRS:%/=%))
@@ -51,8 +42,7 @@ INCLUDES	:= $(patsubst %,-I%, $(INCLUDEDIRS:%/=%))
 LIBS		:= $(patsubst %,-L%, $(LIBDIRS:%/=%))
 
 # define the C source files
-SOURCES		:= $(wildcard $(patsubst %,%/*.cpp, $(SOURCEDIRS))) $(wildcard $(patsubst %,%/*.c, $(SOURCEDIRS)))
-
+SOURCES := $(wildcard $(patsubst %,%/*.cpp, $(SOURCEDIRS))) $(wildcard $(patsubst %,%/*.c, $(C_SOURCEDIRS))) $(wildcard $(patsubst %,%/**/*.cpp, $(SOURCEDIRS))) $(wildcard $(patsubst %,%/**/*.c, $(C_SOURCEDIRS)))
 # define the C object files
 OBJECTS		:= $(patsubst %.cpp,%.o,$(patsubst %.c,%.o,$(SOURCES)))
 
@@ -97,5 +87,5 @@ clean:
 	@echo Cleanup complete!
 
 run: all
-	./$(OUTPUTMAIN)
+	./$(OUTPUTMAIN) src/$(dir)/
 	@echo Executing 'run: all' complete!
