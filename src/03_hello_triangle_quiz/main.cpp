@@ -17,11 +17,18 @@ const char *vertexShaderSource = "#version 330 core\n"
                                  "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
                                  "}\0";
 const char *redFragmentShaderSource = "#version 330 core\n"
-                                   "out vec4 FragColor;\n"
-                                   "void main()\n"
-                                   "{\n"
-                                   "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-                                   "}\n\0";
+                                      "out vec4 FragColor;\n"
+                                      "void main()\n"
+                                      "{\n"
+                                      "   FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+                                      "}\n\0";
+
+const char *greenFragmentShaderSource = "#version 330 core\n"
+                                        "out vec4 FragColor;\n"
+                                        "void main()\n"
+                                        "{\n"
+                                        "   FragColor = vec4(0.0f, 1.0f, 0.0f, 1.0f);\n"
+                                        "}\n\0";
 
 int main()
 {
@@ -55,85 +62,63 @@ int main()
     }
     // glad: load all OpenGL function pointers
 
-    // 判断是否编译成功，不成功的话输出日志信息
-    int success;
-    char infoLog[512];
-
     // 1. 创建顶点和片段着色器
     // 2. 着色器代码附加到着色器对象上,编译着色器代码
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-    }
 
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &redFragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-    }
+    unsigned int redFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(redFragmentShader, 1, &redFragmentShaderSource, NULL);
+    glCompileShader(redFragmentShader);
+
+    unsigned int greenFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(greenFragmentShader, 1, &greenFragmentShaderSource, NULL);
+    glCompileShader(greenFragmentShader);
 
     // 链接(Link)着色器为一个着色器程序对象
-    unsigned int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER_PROGRAM_LINK_FAILED\n"
-                  << infoLog << std::endl;
-    }
+    unsigned int redShaderProgram = glCreateProgram();
+    glAttachShader(redShaderProgram, vertexShader);
+    glAttachShader(redShaderProgram, redFragmentShader);
+    glLinkProgram(redShaderProgram);
+
+    unsigned int greenShaderProgram = glCreateProgram();
+    glAttachShader(greenShaderProgram, vertexShader);
+    glAttachShader(greenShaderProgram, greenFragmentShader);
+    glLinkProgram(greenShaderProgram);
 
     glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    glDeleteShader(redFragmentShader);
+    glDeleteShader(greenFragmentShader);
 
     // 定义顶点数组
-    float vertices[] = {
-        0.5f, 0.5f, 0.0f,   // 右上角
-        0.5f, -0.5f, 0.0f,  // 右下角
-        -0.5f, -0.5f, 0.0f, // 左下角
-        -0.5f, 0.5f, 0.0f   // 左上角
+    float firstTriangle[] = {
+        -0.9f, -0.5f, 0.0f, // left
+        -0.0f, -0.5f, 0.0f, // right
+        -0.45f, 0.5f, 0.0f, // top
+    };
+    float secondTriangle[] = {
+        0.0f, -0.5f, 0.0f, // left
+        0.9f, -0.5f, 0.0f, // right
+        0.45f, 0.5f, 0.0f  // top
     };
 
-    unsigned int indices[] = {
-        // 注意索引从0开始!
-        // 此例的索引(0,1,2,3)就是顶点数组vertices的下标，
-        // 这样可以由下标代表顶点组合成矩形
-        0, 1, 3,
-        1, 2, 3};
-
     // 创建缓冲对象
-    unsigned int VBO, VAO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    unsigned int VBOs[2], VAOs[2];
+    glGenVertexArrays(2, VAOs);
+    glGenBuffers(2, VBOs);
 
-    // 复制顶点数组到缓冲中供OpenGL使用
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // 1. 设置顶点属性指针
+    glBindVertexArray(VAOs[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(firstTriangle), firstTriangle, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    glBindVertexArray(VAOs[1]);             // note that we bind to a different VAO now
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]); // and a different VBO
+    glBufferData(GL_ARRAY_BUFFER, sizeof(secondTriangle), secondTriangle, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0); // because the vertex data is tightly packed we can also specify 0 as the vertex attribute's stride to let OpenGL figure it out
+    glEnableVertexAttribArray(0);
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     // render loop
@@ -150,21 +135,22 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // 当我们渲染一个物体时要使用着色器程序
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        // glDrawArrays(GL_TRIANGLES, 0, 3);
+        glUseProgram(redShaderProgram);
+        glBindVertexArray(VAOs[0]);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
+        glUseProgram(greenShaderProgram);
+        glBindVertexArray(VAOs[1]);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-    glDeleteProgram(shaderProgram);
+    glDeleteVertexArrays(2, VAOs);
+    glDeleteBuffers(12, VBOs);
+    glDeleteProgram(redShaderProgram);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
